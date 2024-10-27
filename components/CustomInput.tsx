@@ -22,6 +22,7 @@ const CustomInput = ({
   name,
   label,
   placeholder = '',
+  isDropdown = false,
   type = 'text',
 }: CustomInputProps) => {
   return (
@@ -33,12 +34,21 @@ const CustomInput = ({
           <FormLabel className="form-label">{label}</FormLabel>
           <div className="flex w-full flex-col">
             <FormControl>
+            {!isDropdown ? (
               <Input
                 placeholder={placeholder}
                 className="border-slate-600 bg-[transparent] border-2 rounded"
                 type={type === 'password' ? 'password' : type}
                 {...field}
               />
+            ) : (
+              <Input
+                placeholder="Select your Profile pic"
+                className="border-slate-600 bg-[transparent] border-2 rounded"
+                type="file"
+                onChange={(e) => field.onChange(e.target.files)}
+              />
+            )}
             </FormControl>
             <FormMessage className="form-message mt-2" />
           </div>

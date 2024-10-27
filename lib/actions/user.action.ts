@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use server';
 
 import { ID, Query } from "node-appwrite";
@@ -7,6 +8,7 @@ import { createAdminClient, createSessionClient } from "../appwrite";
 
 const {
   NEXT_PUBLIC_DATABASE_ID: DATABASE_ID,
+  NEXT_PUBLIC_BUCKET_ID: BUCKET_ID,
   NEXT_PUBLIC_USER_COLLECTION_ID: USER_COLLECTION_ID,
 } = process.env;
 
@@ -14,6 +16,7 @@ interface SignUpParams {
   email: string;
   password: string;
   name: string;
+  profile_pic: File | null;
 }
 
 interface SignInParams {
@@ -62,37 +65,42 @@ export const signIn = async ({ email, password }: SignInParams) => {
 };
 
 export const register = async ({ password, ...userData }: SignUpParams) => {
-  const { email, name } = userData;
+  const { email, name, profile_pic } = userData;
 
   let newUserAccount;
 
   try {
-    const { account, database } = await createAdminClient();
+    
+    const { account, database, storage } = await createAdminClient();
     newUserAccount = await account.create(ID.unique(), email, password, name);
 
-    if (newUserAccount){
-      console.log(newUserAccount)
-    };
-
     if (!newUserAccount) throw new Error('Error creating user');
+
+    let profilePicFileId = null;
+    if (profile_pic) {
+      const profilePicFile = storage.createFile(
+        BUCKET_ID!,
+        ID.unique(),
+        profile_pic,
+      );
+      profilePicFileId = (await profilePicFile).$id;
+      console.log('ProfilePicFileId:', profilePicFileId)
+    }
 
     const newUser = await database.createDocument(
       DATABASE_ID!,
       USER_COLLECTION_ID!,
       ID.unique(),
       {
-        ...userData,
         user_id: newUserAccount.$id,
         name: newUserAccount.name,
         full_name: 'Tisloh Tebe',
         email: newUserAccount.email,
+        profile_pic_id: profilePicFileId,
       }
     );
 
     const session = await account.createEmailPasswordSession(email, password);
-    if (session){
-      console.log('Session:',session)
-    };
 
     (await cookies()).set("appwrite-session", session.secret, {
       path: "/",

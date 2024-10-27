@@ -42,6 +42,7 @@ const AuthForm = ({ type }: { type: string }) => {
       name: "",
       email: "",
       password: "",
+      profile_pic: null,
     },
   })
 
@@ -51,10 +52,12 @@ const AuthForm = ({ type }: { type: string }) => {
 
     try {
       if(type === 'register') {
+        const file = (data.profile_pic as FileList)?.[0] || null;
         const userData = {
           name: data.name!,
           email: data.email,
           password: data.password,
+          profile_pic: file,
         }
 
         const newUser = await register(userData);
@@ -90,6 +93,16 @@ const AuthForm = ({ type }: { type: string }) => {
           <CustomInput control={form.control} name='password' label="Password" placeholder='Enter your password' />
 
           {error && <p className="text-red-500 mt-2">{error}</p>}
+
+          {type === 'register' && (
+            <CustomInput
+              control={form.control}
+              name="profile_pic"
+              label="your profile pic"
+              isDropdown
+              type="file"
+            />
+          )}
 
           <Button type="submit" className="mt-4 w-full" disabled={isLoading}>
             {isLoading ? 'Loading...' : (type === 'signin' ? 'Sign In' : 'Register')}
