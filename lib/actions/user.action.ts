@@ -35,7 +35,7 @@ export const getUserInfo = async ({ userid }: getUserInfoProps) => {
     const user = await database.listDocuments(
       DATABASE_ID!,
       USER_COLLECTION_ID!,
-      [Query.equal('userid', [userid])]
+      [Query.equal('user_id', [userid])]
     )
 
     return parseStringify(user.documents[0]);
@@ -140,3 +140,23 @@ export const logoutAccount = async () => {
     return null;
   }
 }
+
+function timeoutPromise(ms: number) {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms));
+}
+
+export const getProfilePic = async (fileId: string) => {
+  try {
+    const { storage } = await createAdminClient();
+    const result = await storage.getFilePreview(BUCKET_ID!, fileId);
+
+    const buffer = result instanceof ArrayBuffer ? result : new ArrayBuffer(0);
+    if (buffer.byteLength === 0) throw new Error("Failed to fetch profile picture buffer");
+
+    const base64String = Buffer.from(buffer).toString('base64');
+
+    return `data:image/jpeg;base64,${base64String}`;
+  } catch (error) {
+    console.error("Error fetching profile picture:", error);
+  }
+};
