@@ -160,3 +160,24 @@ export const getProfilePic = async (fileId: string) => {
     console.error("Error fetching profile picture:", error);
   }
 };
+
+export const getUsers = async () => {
+  try {
+    const { database } = await createAdminClient();
+
+    const user = await database.listDocuments(
+      DATABASE_ID!,
+      USER_COLLECTION_ID!,
+    )
+
+    const users = {
+      documents: [
+        ...user.documents
+      ]
+    }
+
+    return parseStringify(users.documents);
+  } catch (error) {
+    console.log(error)
+  }
+}
