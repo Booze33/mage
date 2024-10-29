@@ -3,7 +3,7 @@
 // import { getUserInfo, getProfilePic, getLoggedInUser } from "@/lib/actions/user.action";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getChat } from '@/lib/actions/chat.action';
+import { getChats } from '@/lib/actions/chat.action';
 
 export default function Home() {
   // const [user, setUser] = useState(null);
@@ -41,7 +41,7 @@ export default function Home() {
     const fetchChats = async () => {
       try {
         setLoading(true)
-        const fetchedChats = await getChat();
+        const fetchedChats = await getChats();
         if(Array.isArray(fetchedChats)) {
           setChats(fetchedChats);
         } else {
@@ -70,7 +70,7 @@ export default function Home() {
       ) : (
         <div className="flex flex-col items-center justify-center h-full">
           {chats.map((chat: Chat) => (
-            <Link href="/button" key={chat.chat_id}>
+            <Link href={`/chat/${chat.chat_id}`} key={chat.chat_id}>
               <h1>{chat.title}</h1>
             </Link>
           ))}

@@ -1,7 +1,7 @@
 'use server';
 
-import { ID } from "node-appwrite";
-import { parseStringify } from "../../lib/utils";
+import { ID, Query } from "node-appwrite";
+import { parseStringify } from "../utils";
 import { createAdminClient } from "../appwrite";
 
 const {
@@ -31,7 +31,7 @@ export const createChat = async (user1: string, user2: string, title: string) =>
   }
 }
 
-export const getChat = async () => {
+export const getChats = async () => {
   try {
     const { database } = await createAdminClient();
     const chat = await database.listDocuments(
@@ -48,5 +48,21 @@ export const getChat = async () => {
     return parseStringify(chats.documents)
   } catch (error) {
     console.error(error);
+  }
+}
+
+export const getChat = async (chatId: string) => {
+  try {
+    const { database } = await createAdminClient();
+    console.log('*******', chatId)
+    const chat = await database.listDocuments(
+      DATABASE_ID!,
+      CHAT_COLLECTION_ID!,
+      [Query.equal('chat_id', [chatId])]
+    );
+
+    return parseStringify(chat.documents)
+  } catch (error) {
+    console.error("Error fetching chat:", error);
   }
 }
