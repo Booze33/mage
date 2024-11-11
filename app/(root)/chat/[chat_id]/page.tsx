@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react';
 import { sendMessage, getMessages } from "@/lib/actions/message.action";
 import { getChat } from '@/lib/actions/chat.action';
 import { client } from "@/lib/clientSide";
+import { getLoggedInUser } from '@/lib/actions/user.action';
 
 const DATABASE_ID = process.env.NEXT_PUBLIC_DATABASE_ID;
 const MESSAGE_COLLECTION_ID = process.env.NEXT_PUBLIC_MESSAGE_COLLECTION_ID;
@@ -15,6 +16,7 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
   const [chat, setChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
     const fetchChat = async () => {
@@ -42,6 +44,12 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
 
   useEffect(() => {
     const fetchMessages = async () => {
+      const currentUser = await getLoggedInUser();
+      setUserId(currentUser.user_id)
+        // userId = currentUser.user_id;
+
+      console.log('test', userId)
+
       try {
         setError(null);
         const chatMessages = await getMessages(chat_id);
@@ -69,6 +77,8 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
     const channel = `databases.${DATABASE_ID}.collections.${MESSAGE_COLLECTION_ID}.documents`;
     let unsubscribe: (() => void) | null = null;
 
+    console.log('client:', client)
+
     const setupRealtimeSubscription = async () => {
       try {
         if (!client) {
@@ -91,7 +101,7 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
 
             if (eventType.includes('create')) {
               const newMessage = response.payload as MessageProps;;
-              setMessages((prevMessages) => [newMessage, ...prevMessages]);
+              setMessages((prevMessages) => [...prevMessages, newMessage]);
               console.log(messages)
               console.log('Realtime subscription setup completed');
             }
@@ -106,6 +116,7 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
     }
 
     setupRealtimeSubscription();
+    console.log('unsubscribe', unsubscribe)
 
     return () => {
       if (unsubscribe) {
@@ -147,18 +158,22 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
       ) : (
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((msg) => (
-            <div 
-              key={msg.message_id}
-              className={`p-3 rounded-lg max-w-[80%] ${
-                msg.sender_id === chat?.user1_id 
-                  ? 'ml-auto bg-blue-500 text-white' 
-                  : 'bg-gray-200'
-              }`}
-            >
-              <p>{msg.content}</p>
-              <span className="text-xs opacity-75">
-              {new Date(msg.time_sent).toLocaleTimeString()}
-              </span>
+            <div key={msg.message_id}>
+              {msg.sender_id === userId ? (
+                <div className="p-3 rounded-lg max-w-[80%] ml-auto bg-blue-500 text-white">
+                  <p>{msg.content}</p>
+                    <span className="text-xs opacity-75">
+                    {new Date(msg.time_sent).toLocaleTimeString()}
+                    </span>
+                </div>
+              ) : (
+                <div className="p-3 rounded-lg max-w-[80%] bg-gray-200">
+                  <p>{msg.content}</p>
+                  <span className="text-xs opacity-75">
+                  {new Date(msg.time_sent).toLocaleTimeString()}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -177,7 +192,7 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
           onClick={handleSendMessage}
           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
-          Send
+          send
         </button>
       </div>
     </div>

@@ -430,3 +430,25 @@ const ChatPage = ({ params }: { params: Promise<{ chat_id: string }> }) => {
 };
 
 export default ChatPage;
+
+{messages.map((msg) => (
+  {(msg.sender_id === userId) ? (
+    <div key={msg.message_id} className="p-3 rounded-lg max-w-[80%] ml-auto bg-blue-500 text-white"></div>
+  ) : (
+    <div key={msg.message_id} className="p-3 rounded-lg max-w-[80%] ml-auto bg-blue-500 text-white"></div>
+)}
+
+
+<div 
+              key={msg.message_id}
+              className={`p-3 rounded-lg max-w-[80%] ${
+                msg.sender_id === userId 
+                  ? 'ml-auto bg-blue-500 text-white' 
+                  : 'bg-gray-200'
+              }`}
+            >
+              <p>{msg.content}</p>
+              <span className="text-xs opacity-75">
+              {new Date(msg.time_sent).toLocaleTimeString()}
+              </span>
+            </div>
